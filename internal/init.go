@@ -11,7 +11,7 @@ var MOVIE_SERVICE string
 
 func InitializeInternalServices() {
 	SEATING_SERVICE = utils.GetenvOr("SEATING_SERVICE", "http://localhost:9004/seating/update-status")
-	BOOKING_SERVICE = utils.GetenvOr("SEATING_SERVICE", "http://localhost:9009/booking/buy-seat")
+	BOOKING_SERVICE = utils.GetenvOr("BOOKING_SERVICE", "http://localhost:9009/booking/buy-seat")
 	AUTHEN_SERVICE = utils.GetenvOr("AUTHEN_SERVICE", "http://localhost:9001/authen/update-hist")
 	MOVIE_SERVICE = utils.GetenvOr("MOVIE_SERVICE", "http://localhost:9002/movie/get-movie")
 }
