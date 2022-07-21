@@ -1,0 +1,19 @@
+name: Build as-payment-consumer CI
+
+on: 
+  push:
+    branches: [ master ]
+
+jobs:
+  build-as-payment-consumer:
+    runs-on: ubuntu-latest
+    name: Building as-payment consumer
+    steps:
+      - uses: actions/checkout@v3
+      - id: foo
+        uses: awesome-sphere/as-ci-cd-template@v1
+        with:
+          repo: as-payment-consumer
+          token: ${{ secrets.GITHUB_TOKEN }}
+          REGISTRY: ghcr.io
+          BASE_IMG_NAME: ${{ github.repository }}
