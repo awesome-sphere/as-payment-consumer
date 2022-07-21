@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"log"
+	"time"
 
 	"github.com/awesome-sphere/as-payment-consumer/db"
 	"github.com/awesome-sphere/as-payment-consumer/db/models"
@@ -95,8 +96,11 @@ func messageRead(topic_name string) {
 		case CREATE_ORDER_TOPIC:
 			go createOrderRead(reader, topic_name)
 		case UPDATE_ORDER_TOPIC:
-			go updateOrderRead(reader, topic_name)
+			timer := time.NewTimer(time.Minute)
+			go func() {
+				<-timer.C
+				updateOrderRead(reader, topic_name)
+			}()
 		}
-
 	}
 }
