@@ -3,15 +3,17 @@ package internal
 import (
 	"bytes"
 	"encoding/json"
+	"fmt"
 	"log"
 	"net/http"
+	"strings"
 
-	outputserializer "github.com/awesome-sphere/as-payment-consumer/internal/output-serializer"
+	"github.com/awesome-sphere/as-payment-consumer/internal/serializer"
 	"github.com/awesome-sphere/as-payment-consumer/kafka/interfaces"
 )
 
 func notifySeatingService(val interfaces.UpdateOrderMessageInterface, seatID int) {
-	body := outputserializer.SeatingServiceSerializer{
+	body := serializer.SeatingServiceSerializer{
 		TimeSlotID: int64(val.TimeSlotId),
 		TheaterID:  int64(val.TheaterId),
 		SeatID:     seatID,
@@ -20,24 +22,70 @@ func notifySeatingService(val interfaces.UpdateOrderMessageInterface, seatID int
 	jsonBody, err := json.Marshal(body)
 	if err != nil {
 		log.Printf("Failed to marshal message: %v", err.Error())
-		return
 	}
 	http.Post(SEATING_SERVICE, "application/json", bytes.NewBuffer(jsonBody))
 }
 
-func generateTicket(val interfaces.UpdateOrderMessageInterface, seatID int) {
-	// TODO: generate ticket
-	// TODO: send to authen
+func notifyBookingSerive(val interfaces.UpdateOrderMessageInterface) (*http.Response, []byte) {
+	body := serializer.BookingServiceSerializer{
+		TimeSlotID: int64(val.TimeSlotId),
+		TheaterID:  int64(val.TheaterId),
+		SeatID:     val.SeatNumber,
+	}
+	jsonBody, err := json.Marshal(body)
+	if err != nil {
+		log.Printf("Failed to marshal message: %v", err.Error())
+	}
+	resp, _ := http.Post(BOOKING_SERVICE, "application/json", bytes.NewBuffer(jsonBody))
+	return resp, jsonBody
 }
 
-func notifyBookingService(val interfaces.UpdateOrderMessageInterface, seatID int) {
-	// TODO: wait for booking service to be ready
+func decodeResponse(resp *http.Response, jsonBody []byte, target interface{}, service string) error {
+	if resp.StatusCode != 200 {
+		log.Printf("Failed to notify %s service: %v", service, resp.StatusCode)
+
+	}
+
+	defer resp.Body.Close()
+	return json.NewDecoder(resp.Body).Decode(target)
 }
 
 func NotifyOtherServices(val interfaces.UpdateOrderMessageInterface) {
+	bookingResp := serializer.BookingResponseSerializer{}
+	resp, jsonBody := notifyBookingSerive(val)
+	err := decodeResponse(resp, jsonBody, &bookingResp, "booking")
+	if err != nil {
+		return
+	}
+
+	movieResp := serializer.MovieResponseSerializer{}
+	resp, _ = http.Get(fmt.Sprintf("%s/%d", MOVIE_SERVICE, bookingResp.MovieID))
+	err = decodeResponse(resp, jsonBody, &movieResp, "movie")
+	if err != nil {
+		print(err.Error())
+		return
+	}
+	seatNumbers := strings.Trim(strings.Join(strings.Fields(fmt.Sprint(val.SeatNumber)), ", "), "[]")
+	body := serializer.GenerateTicketSerializer{
+		UserID:   int64(val.UserID),
+		Title:    movieResp.Movie.Title,
+		Location: bookingResp.Location,
+		Duration: movieResp.Movie.Duration,
+		// FIXME: Find a proper way to format date time
+		Date:      bookingResp.Date.Format("02/Jan/2006"),
+		Time:      bookingResp.Date.Format("15:04"),
+		SeatID:    seatNumbers,
+		TheaterID: int(val.TheaterId),
+	}
+
+	jsonBody, err = json.Marshal(body)
+	if err != nil {
+		log.Printf("Failed to marshal message: %v", err.Error())
+	}
+
+	http.Post(AUTHEN_SERVICE, "application/json", bytes.NewBuffer(jsonBody))
+
 	for _, seatID := range val.SeatNumber {
 		notifySeatingService(val, seatID)
-		notifyBookingService(val, seatID)
-		generateTicket(val, seatID)
 	}
 }

@@ -1,22 +1,17 @@
 package internal
 
 import (
-	"fmt"
-
 	"github.com/awesome-sphere/as-payment-consumer/utils"
 )
 
 var SEATING_SERVICE string
 var BOOKING_SERVICE string
-
-func initializeService(service, defaultPort, path string) string {
-	HOST := utils.GetenvOr(service+"_HOST", "localhost")
-	PORT := utils.GetenvOr(service+"_PORT", defaultPort)
-	PATH := utils.GetenvOr(service+"_PATH", path)
-	return fmt.Sprintf("http://%s:%s%s", HOST, PORT, PATH)
-}
+var AUTHEN_SERVICE string
+var MOVIE_SERVICE string
 
 func InitializeInternalServices() {
-	SEATING_SERVICE = initializeService("SEATING_SERVICE", "9004", "/seating/update-status")
-	BOOKING_SERVICE = initializeService("BOOKING_SERVICE", "9009", "/booking/update-status")
+	SEATING_SERVICE = utils.GetenvOr("SEATING_SERVICE", "http://localhost:9004/seating/update-status")
+	BOOKING_SERVICE = utils.GetenvOr("SEATING_SERVICE", "http://localhost:9009/booking/buy-seat")
+	AUTHEN_SERVICE = utils.GetenvOr("AUTHEN_SERVICE", "http://localhost:9001/authen/update-hist")
+	MOVIE_SERVICE = utils.GetenvOr("MOVIE_SERVICE", "http://localhost:9002/movie/get-movie")
 }
