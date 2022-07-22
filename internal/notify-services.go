@@ -41,7 +41,7 @@ func notifyBookingService(val interfaces.UpdateOrderMessageInterface) (*http.Res
 }
 
 func decodeResponse(resp *http.Response, jsonBody []byte, target interface{}, service string) error {
-	if resp != nil && resp.StatusCode != 200 {
+	if resp == nil || resp.StatusCode != 200 {
 		log.Printf("Failed to notify %s service: %v", service, resp.StatusCode)
 		return fmt.Errorf("Failed to notify %s service: %v", service, resp.StatusCode)
 	}
