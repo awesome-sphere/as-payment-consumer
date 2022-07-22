@@ -26,7 +26,7 @@ func notifySeatingService(val interfaces.UpdateOrderMessageInterface, seatID int
 	http.Post(SEATING_SERVICE, "application/json", bytes.NewBuffer(jsonBody))
 }
 
-func notifyBookingSerive(val interfaces.UpdateOrderMessageInterface) (*http.Response, []byte) {
+func notifyBookingService(val interfaces.UpdateOrderMessageInterface) (*http.Response, []byte) {
 	body := serializer.BookingServiceSerializer{
 		TimeSlotID: int64(val.TimeSlotId),
 		TheaterID:  int64(val.TheaterId),
@@ -43,7 +43,7 @@ func notifyBookingSerive(val interfaces.UpdateOrderMessageInterface) (*http.Resp
 func decodeResponse(resp *http.Response, jsonBody []byte, target interface{}, service string) error {
 	if resp.StatusCode != 200 {
 		log.Printf("Failed to notify %s service: %v", service, resp.StatusCode)
-
+		return fmt.Errorf("Failed to notify %s service: %v", service, resp.StatusCode)
 	}
 
 	defer resp.Body.Close()
@@ -52,7 +52,7 @@ func decodeResponse(resp *http.Response, jsonBody []byte, target interface{}, se
 
 func NotifyOtherServices(val interfaces.UpdateOrderMessageInterface) {
 	bookingResp := serializer.BookingResponseSerializer{}
-	resp, jsonBody := notifyBookingSerive(val)
+	resp, jsonBody := notifyBookingService(val)
 	err := decodeResponse(resp, jsonBody, &bookingResp, "booking")
 	if err != nil {
 		return

@@ -96,7 +96,7 @@ func messageRead(topic_name string) {
 		case CREATE_ORDER_TOPIC:
 			go createOrderRead(reader, topic_name)
 		case UPDATE_ORDER_TOPIC:
-			timer := time.NewTimer(time.Minute)
+			timer := time.NewTimer(1*time.Minute + 30*time.Second)
 			go func() {
 				<-timer.C
 				updateOrderRead(reader, topic_name)
