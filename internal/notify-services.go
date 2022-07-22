@@ -51,13 +51,13 @@ func decodeResponse(resp *http.Response, jsonBody []byte, target interface{}, se
 	return json.NewDecoder(resp.Body).Decode(target)
 }
 
-func getDate(time time.Time) string {
-	year, month, day := time.Date()
-	return fmt.Sprintf("%d/%v/%d", day, month, year)
+func getDate(datetime time.Time) string {
+	year, month, day := datetime.Date()
+	return fmt.Sprintf("%0d/%v/%d", day, month, year)
 }
 
-func getTime(time time.Time) string {
-	return fmt.Sprintf("%d:%d", time.Hour(), time.Minute())
+func getTime(datetime time.Time) string {
+	return fmt.Sprintf("%d:%d", datetime.Hour(), datetime.Minute())
 }
 
 func NotifyOtherServices(val interfaces.UpdateOrderMessageInterface) {
@@ -76,6 +76,7 @@ func NotifyOtherServices(val interfaces.UpdateOrderMessageInterface) {
 		return
 	}
 	seatNumbers := strings.Trim(strings.Join(strings.Fields(fmt.Sprint(val.SeatNumber)), ", "), "[]")
+	log.Printf("Date: %v\n", bookingResp.Date)
 	body := serializer.GenerateTicketSerializer{
 		UserID:   int64(val.UserID),
 		Title:    movieResp.Movie.Title,
