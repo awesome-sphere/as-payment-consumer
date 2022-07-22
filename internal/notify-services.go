@@ -7,6 +7,7 @@ import (
 	"log"
 	"net/http"
 	"strings"
+	"time"
 
 	"github.com/awesome-sphere/as-payment-consumer/internal/serializer"
 	"github.com/awesome-sphere/as-payment-consumer/kafka/interfaces"
@@ -50,6 +51,15 @@ func decodeResponse(resp *http.Response, jsonBody []byte, target interface{}, se
 	return json.NewDecoder(resp.Body).Decode(target)
 }
 
+func getDate(time time.Time) string {
+	year, month, day := time.Date()
+	return fmt.Sprintf("%d/%v/%d", day, month, year)
+}
+
+func getTime(time time.Time) string {
+	return fmt.Sprintf("%d:%d", time.Hour(), time.Minute())
+}
+
 func NotifyOtherServices(val interfaces.UpdateOrderMessageInterface) {
 	bookingResp := serializer.BookingResponseSerializer{}
 	resp, jsonBody := notifyBookingService(val)
@@ -72,8 +82,8 @@ func NotifyOtherServices(val interfaces.UpdateOrderMessageInterface) {
 		Location: bookingResp.Location,
 		Duration: movieResp.Movie.Duration,
 		// FIXME: Find a proper way to format date time
-		Date:      bookingResp.Date.Format("02/Jan/2006"),
-		Time:      bookingResp.Date.Format("15:04"),
+		Date:      getDate(bookingResp.Date),
+		Time:      getTime(bookingResp.Date),
 		SeatID:    seatNumbers,
 		TheaterID: int(val.TheaterId),
 	}
