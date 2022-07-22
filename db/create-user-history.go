@@ -24,7 +24,7 @@ func CreateUserHistory(user_id int, time_slot_id int, theater_id int, seat_numbe
 			err := DB.Create(&history).Error
 			if err != nil {
 				log.Printf("Failed to update booking history: %v", err.Error())
-				return
+				continue
 			}
 		}
 		log.Printf("Successfully updating %d's purchase history", user_id)

@@ -3,6 +3,7 @@ package kafka
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"log"
 	"time"
 
@@ -40,8 +41,10 @@ func createOrderRead(r *kafka.Reader, topic_name string) {
 		msg, err := r.ReadMessage(context.Background())
 		if err != nil {
 			log.Println("could not read message: " + err.Error())
-			break
+			continue
 		}
+
+		fmt.Printf("Reading message at topic [%v] partition [%v] offset [%v]: %s", msg.Topic, msg.Partition, msg.Offset, string(msg.Value))
 
 		var val interfaces.CreateOrderMessageInterface
 
@@ -61,8 +64,10 @@ func updateOrderRead(r *kafka.Reader, topic_name string) {
 		msg, err := r.ReadMessage(context.Background())
 		if err != nil {
 			log.Println("could not read message: " + err.Error())
-			break
+			continue
 		}
+
+		fmt.Printf("Reading message at topic [%v] partition [%v] offset [%v]: %s", msg.Topic, msg.Partition, msg.Offset, string(msg.Value))
 
 		var val interfaces.UpdateOrderMessageInterface
 
